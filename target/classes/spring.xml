@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/aop
+                           http://www.springframework.org/schema/aop/spring-aop.xsd
+http://www.springframework.org/schema/mvc
+                           http://www.springframework.org/schema/mvc/spring-mvc.xsd
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx.xsd
+">
+<!--1.扫描注解包-->
+    <context:component-scan base-package="com.qf"></context:component-scan>
+<!--2.创建视图解析器-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="suffix" value=".jsp"></property>
+        <property name="prefix" value="/"></property>
+    </bean>
+    <!--3.指定连接数据库的信息-->
+    <context:property-placeholder location="classpath:db.properties"></context:property-placeholder>
+<bean id="db" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="${driver}"/>
+    <property name="username" value="${uname}"/>
+    <property name="password" value="${password}"/>
+    <property name="url" value="${url}"/>
+</bean>
+    <!--4.创建session工厂-->
+    <bean id="fac" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="db"></property>
+        <property name="mapperLocations" value="classpath:mapper/*.xml"></property>
+        <property name="configLocation" value="classpath:mybatis-config.xml"></property>
+    </bean>
+    <!--5.创建sqlSessionTemplate-->
+    <!--<bean id="temp" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg index="0" ref="fac"></constructor-arg>
+    </bean>-->
+    <!--5.省略dao层实现类-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.qf.dao"></property>
+        <property name="sqlSessionFactoryBeanName" value="fac"></property>
+    </bean>
+    <!--6.处理json-->
+    <mvc:annotation-driven></mvc:annotation-driven>
+    <!--7.事务管理-->
+    <bean id="mytx" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="db"></property>
+    </bean>
+    <tx:annotation-driven transaction-manager="mytx"></tx:annotation-driven>
+    <!--8.处理静态资源-->
+    <mvc:default-servlet-handler></mvc:default-servlet-handler>
+    <!--资料上传-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="99999999999"></property>
+        <property name="defaultEncoding" value="utf-8"></property>
+    </bean>
+    <!--导入其他的spring.xml文件-->
+   <!-- <import resource="classpath:spring-tx.xml"></import>-->
+    <import resource="classpath:spring-cxf.xml"></import>
+</beans>
